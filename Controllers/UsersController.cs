@@ -57,6 +57,9 @@ namespace Bogus_MVC_.Controllers
         
         public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,Email,PhoneNumber,Address")] User user)
         {
+            //var i = 1;
+
+            
             var userFake = new Faker<User_>()
                 .RuleFor(o => o.FirstName, o => o.Person.FirstName)
                 .RuleFor(o => o.LastName, o => o.Person.LastName)
@@ -64,10 +67,15 @@ namespace Bogus_MVC_.Controllers
                 .RuleFor(o => o.Address, o => o.Address.StreetAddress())
                 .RuleFor(o => o.PhoneNumber, o => o.Person.Phone);
 
-            var user_ = userFake.Generate();
+            for(var i = 0; i<10000; i++)
+            {
+                var user_ = userFake.Generate();
+                _context.Users.Add(user_);
+                _context.SaveChanges();
+            }
+           
 
-            _context.Users.Add(user_);
-            _context.SaveChanges();
+
 
             //if (ModelState.IsValid)
             //{
