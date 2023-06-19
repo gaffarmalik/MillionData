@@ -67,12 +67,11 @@ namespace Bogus_MVC_.Controllers
                 .RuleFor(o => o.Address, o => o.Address.StreetAddress())
                 .RuleFor(o => o.PhoneNumber, o => o.Person.Phone);
 
-            for(var i = 0; i<=100; i++)
-            {
-                var user_ = userFake.Generate();
-                _context.Users.Add(user_);
+           
+                var user_ = userFake.Generate(100);
+                _context.Users.AddRange(user_);
                 _context.SaveChanges();
-            }
+            
            
 
 
