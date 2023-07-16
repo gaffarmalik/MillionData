@@ -8,6 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using Bogus_MVC_.Data;
 using Bogus_MVC_.Models;
 using Bogus;
+using NuGet.Protocol;
+using System.Collections.ObjectModel;
+using Newtonsoft.Json;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using System.Data.OleDb;
+using System.Text;
 
 namespace Bogus_MVC_.Controllers
 {
@@ -58,33 +64,104 @@ namespace Bogus_MVC_.Controllers
         public async Task<IActionResult> Create([Bind("Id,FirstName,LastName,Email,PhoneNumber,Address")] User user)
         {
             //var i = 1;
-
+            var PostTrans = new Faker<PostTran>();
             
-            var userFake = new Faker<User_>()
-                .RuleFor(o => o.FirstName, o => o.Person.FirstName)
-                .RuleFor(o => o.LastName, o => o.Person.LastName)
-                .RuleFor(o => o.Email, o => o.Person.Email)
-                .RuleFor(o => o.Address, o => o.Address.StreetAddress())
-                .RuleFor(o => o.PhoneNumber, o => o.Person.Phone);
 
-           
-                var user_ = userFake.Generate(100);
-                _context.Users.AddRange(user_);
-                _context.SaveChanges();
-            
-           
+            //Type types = typeof(PostTran);
+
+            var faker = new Faker("en");
+
+            PostTran[] posts = new PostTran[500000];
+
+            //Array<PostTran> array = new();
+            //TODO: Special IDS
 
 
+            string[] SpecialIDS = { "PostTranId", "PrevPostTranId", "NextPostTranId", "PrevTranApproved" };
+            long[] SpecialIDCounter = { 0, -1, 1, -1 };
 
-            //if (ModelState.IsValid)
+
+            //var SpecialIDS = new Dictionary<String, long>()
             //{
-            //    _context.Add(user);
-            //    await _context.SaveChangesAsync();
-            //    return RedirectToAction(nameof(Index));
-            //}
-            // return View(user);
+            //    ["PostTranId"] = 0,
+            //    ["PrevPostTranId"] =-1,
+            //    ["NextPostTranId"] = 1,
+            //    ["PrevTranApproved"] = -1,
+            //};
 
-            return RedirectToAction(nameof(Index));
+            long i = 0;
+
+
+            // OleDbDataReader reader = command.ExecuteReader();
+            string Path = @"C:\\Users\\AbdulgaffarAbdulmali\\Documents\Buffer.txt";
+            //StreamWriter writer = new StreamWriter($path);
+
+            using (StreamWriter streamwriter = new StreamWriter(Path, true, Encoding.UTF8, 65536))
+            {
+                while (i < posts.Length)
+                {
+                    var eo = new PostTran();
+
+                    // TODO; Do a first scan with reflection and handoever to delegate later;
+                    foreach (var property in eo.GetType().GetProperties())
+                    {
+                        //var property = eo.GetType().GetProperties()[ji];
+
+                        var pT = property.PropertyType;
+                        bool pTIsNullable = pT == typeof(Nullable<>);
+
+                        if (SpecialIDS.Contains(property.Name))
+                        {
+                            // SpecialIDS.GetValueOrDefault(property.Name);
+                            // SpecialIDS[property.Name]++;
+
+                            //eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Lorem.Word(), null);
+                            if (property.Name == "PostTranId") eo.PostTranId = SpecialIDCounter[0]++;
+                            if (property.Name == "PrevPostTranId") eo.PrevPostTranId = SpecialIDCounter[1]++;
+                            if (property.Name == "NextPostTranId") eo.NextPostTranId = SpecialIDCounter[2]++;
+                            if (property.Name == "PrevTranApproved") eo.PrevTranApproved = SpecialIDCounter[3]++;
+                            continue;
+                        }
+
+
+                        // Move to next property, don't run the rest, because their data types may fall in the category below
+
+
+
+                        // o.GetType().GetProperty(property.Name)
+                        //typeof(o).GetProperty(property.Name), o => o.Person.FirstName
+                        if (pT == typeof(string)) eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Lorem.Word(), null);
+
+                        if (pT == typeof(decimal) || pT == typeof(Nullable<decimal>)) eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Random.Decimal(10), null);
+
+                        if (pT == typeof(long) || pT == typeof(Nullable<long>)) eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Random.Long(10), null);
+
+                        if (pT == typeof(int) || pT == typeof(Nullable<int>)) eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Random.Int(10), null);
+
+                        if (pT == typeof(DateTime) || pT == typeof(Nullable<DateTime>)) eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Date.Past(), null);
+
+
+                        if (pT == typeof(byte) || pT == typeof(Nullable<byte>)) eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Random.Byte(10), null);
+
+                    }
+
+
+                    posts[i] = eo;
+
+                    streamwriter.WriteLine("Some line of text");
+
+                    i++;
+
+
+
+                }
+
+
+
+            }
+
+
+            return Json(new int[] { 1,2}); //RedirectToAction(nameof(Index));
         }
 
         // GET: Users/Edit/5
