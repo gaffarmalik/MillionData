@@ -1072,3 +1072,10 @@ C:\Users\AbdulgaffarAbdulmali\Documents\MillionData\obj\Debug\net6.0\refint\Bogu
 C:\Users\AbdulgaffarAbdulmali\Documents\MillionData\obj\Debug\net6.0\Bogus_MVC_.pdb
 C:\Users\AbdulgaffarAbdulmali\Documents\MillionData\obj\Debug\net6.0\Bogus_MVC_.genruntimeconfig.cache
 C:\Users\AbdulgaffarAbdulmali\Documents\MillionData\obj\Debug\net6.0\ref\Bogus_MVC_.dll
+C:\Users\AbdulgaffarAbdulmali\Documents\MillionData\bin\Debug\net6.0\System.Data.SqlClient.dll
+C:\Users\AbdulgaffarAbdulmali\Documents\MillionData\bin\Debug\net6.0\ToDataTable.dll
+C:\Users\AbdulgaffarAbdulmali\Documents\MillionData\bin\Debug\net6.0\runtimes\win-arm64\native\sni.dll
+C:\Users\AbdulgaffarAbdulmali\Documents\MillionData\bin\Debug\net6.0\runtimes\win-x64\native\sni.dll
+C:\Users\AbdulgaffarAbdulmali\Documents\MillionData\bin\Debug\net6.0\runtimes\win-x86\native\sni.dll
+C:\Users\AbdulgaffarAbdulmali\Documents\MillionData\bin\Debug\net6.0\runtimes\unix\lib\netcoreapp2.1\System.Data.SqlClient.dll
+C:\Users\AbdulgaffarAbdulmali\Documents\MillionData\bin\Debug\net6.0\runtimes\win\lib\netcoreapp2.1\System.Data.SqlClient.dll

@@ -14,6 +14,9 @@ using Newtonsoft.Json;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using System.Data.OleDb;
 using System.Text;
+using System.Diagnostics;
+using Microsoft.Data.SqlClient;
+using ToDataTable;
 
 namespace Bogus_MVC_.Controllers
 {
@@ -26,30 +29,8 @@ namespace Bogus_MVC_.Controllers
             _context = context;
         }
 
-        // GET: Users
-        public async Task<IActionResult> Index()
-        {
-              return View(await _context.Users.ToListAsync());
-        }
-
-        // GET: Users/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null || _context.Users == null)
-            {
-                return NotFound();
-            }
-
-            var user = await _context.Users
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return View(user);
-        }
-
+      
+    
         // GET: Users/Create
         public IActionResult Create()
         {
@@ -71,190 +52,74 @@ namespace Bogus_MVC_.Controllers
 
             var faker = new Faker("en");
 
-            PostTran[] posts = new PostTran[500000];
-
-            //Array<PostTran> array = new();
-            //TODO: Special IDS
+            PostTran[] posts = new PostTran[2000000]; // 2,illion
 
 
             string[] SpecialIDS = { "PostTranId", "PrevPostTranId", "NextPostTranId", "PrevTranApproved" };
             long[] SpecialIDCounter = { 0, -1, 1, -1 };
 
 
-            //var SpecialIDS = new Dictionary<String, long>()
-            //{
-            //    ["PostTranId"] = 0,
-            //    ["PrevPostTranId"] =-1,
-            //    ["NextPostTranId"] = 1,
-            //    ["PrevTranApproved"] = -1,
-            //};
-
             long i = 0;
 
+            var eo = new PostTran();
 
             // OleDbDataReader reader = command.ExecuteReader();
             string Path = @"C:\\Users\\AbdulgaffarAbdulmali\\Documents\Buffer.txt";
             //StreamWriter writer = new StreamWriter($path);
 
-            using (StreamWriter streamwriter = new StreamWriter(Path, true, Encoding.UTF8, 65536))
-            {
+           // using (StreamWriter streamwriter = new StreamWriter(Path, true, Encoding.UTF8, 65536))
+            //{
                 while (i < posts.Length)
                 {
-                    var eo = new PostTran();
+                 eo = new PostTran();
 
-                    // TODO; Do a first scan with reflection and handoever to delegate later;
-                    foreach (var property in eo.GetType().GetProperties())
-                    {
-                        //var property = eo.GetType().GetProperties()[ji];
-
-                        var pT = property.PropertyType;
-                        bool pTIsNullable = pT == typeof(Nullable<>);
-
-                        if (SpecialIDS.Contains(property.Name))
-                        {
-                            // SpecialIDS.GetValueOrDefault(property.Name);
-                            // SpecialIDS[property.Name]++;
-
-                            //eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Lorem.Word(), null);
-                            if (property.Name == "PostTranId") eo.PostTranId = SpecialIDCounter[0]++;
-                            if (property.Name == "PrevPostTranId") eo.PrevPostTranId = SpecialIDCounter[1]++;
-                            if (property.Name == "NextPostTranId") eo.NextPostTranId = SpecialIDCounter[2]++;
-                            if (property.Name == "PrevTranApproved") eo.PrevTranApproved = SpecialIDCounter[3]++;
-                            continue;
-                        }
-
-
-                        // Move to next property, don't run the rest, because their data types may fall in the category below
-
-
-
-                        // o.GetType().GetProperty(property.Name)
-                        //typeof(o).GetProperty(property.Name), o => o.Person.FirstName
-                        if (pT == typeof(string)) eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Lorem.Word(), null);
-
-                        if (pT == typeof(decimal) || pT == typeof(Nullable<decimal>)) eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Random.Decimal(10), null);
-
-                        if (pT == typeof(long) || pT == typeof(Nullable<long>)) eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Random.Long(10), null);
-
-                        if (pT == typeof(int) || pT == typeof(Nullable<int>)) eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Random.Int(10), null);
-
-                        if (pT == typeof(DateTime) || pT == typeof(Nullable<DateTime>)) eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Date.Past(), null);
-
-
-                        if (pT == typeof(byte) || pT == typeof(Nullable<byte>)) eo.GetType().GetProperty(property.Name).SetValue(eo, faker.Random.Byte(10), null);
-
-                    }
+                eo.PostTranId = (long) SpecialIDCounter[0]++;
+                    eo.PrevPostTranId = (long) faker.Random.Long();
+                    eo.NextPostTranId = (long) faker.Random.Long();
+                    eo.PrevTranApproved = faker.Random.Decimal();
+                    eo.AbortRspCode = "ifndifd";
 
 
                     posts[i] = eo;
 
-                    streamwriter.WriteLine("Some line of text");
+                   // streamwriter.WriteLine("Some line of text");
 
                     i++;
 
+                }
 
+
+                using(var copy = new SqlBulkCopy("Server=localhost;Database=master;Trusted_Connection=True;"))
+                {
+
+                    copy.DestinationTableName = "dbo.post_tran";
+                   
+                    copy.BulkCopyTimeout= 10000;
+                    Stopwatch regularSW = new Stopwatch();
+
+                    regularSW.Start();
+                    copy.ColumnMappings.Add(nameof(PostTran.PostTranId), "post_tran_id");
+                    copy.ColumnMappings.Add(nameof(PostTran.PrevPostTranId), "prev_post_tran_id");
+                    copy.ColumnMappings.Add(nameof(PostTran.NextPostTranId), "next_post_tran_id");
+                    copy.ColumnMappings.Add(nameof(PostTran.PrevTranApproved), "prev_tran_approved");
+
+                    // Array.Todat
+                    var dt = posts.ToDataTable<PostTran>();   
+                    copy.WriteToServer(dt);
+
+                    regularSW.Stop();
+
+                    Console.WriteLine("Measured time: " + regularSW.Elapsed);
 
                 }
 
 
 
-            }
+            //}
 
 
             return Json(new int[] { 1,2}); //RedirectToAction(nameof(Index));
         }
 
-        // GET: Users/Edit/5
-        public async Task<IActionResult> Edit(int? id)
-        {
-            if (id == null || _context.Users == null)
-            {
-                return NotFound();
-            }
-
-            var user = await _context.Users.FindAsync(id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-            return View(user);
-        }
-
-        // POST: Users/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,Email,PhoneNumber,Address")] User_ user)
-        {
-            if (id != user.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(user);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!UserExists(user.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(user);
-        }
-
-        // GET: Users/Delete/5
-        public async Task<IActionResult> Delete(int? id)
-        {
-            if (id == null || _context.Users == null)
-            {
-                return NotFound();
-            }
-
-            var user = await _context.Users
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return View(user);
-        }
-
-        // POST: Users/Delete/5
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            if (_context.Users == null)
-            {
-                return Problem("Entity set 'ApplicationDbContext.Users'  is null.");
-            }
-            var user = await _context.Users.FindAsync(id);
-            if (user != null)
-            {
-                _context.Users.Remove(user);
-            }
-            
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
-        }
-
-        private bool UserExists(int id)
-        {
-          return _context.Users.Any(e => e.Id == id);
-        }
     }
 }

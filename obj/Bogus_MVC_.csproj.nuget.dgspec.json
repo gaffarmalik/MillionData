@@ -67,6 +67,10 @@
             "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
               "target": "Package",
               "version": "[6.0.10, )"
+            },
+            "ToDataTable": {
+              "target": "Package",
+              "version": "[0.1.2, )"
             }
           },
           "imports": [
